@@ -16,35 +16,44 @@ namespace CustomAttributeExample
         private Dictionary<string, List<string>> UpdatablePropertyNamesByClassName
         { get; set; } = new Dictionary<string, List<string>>();
 
-        public List<UpdateObject> GetUpdateObjects<T>(JObject rawUpdateObj)
+        public (List<UpdateObject>, Error) GetUpdateObjects<T>(JObject rawUpdateObj)
         {
             var updateObjects = new List<UpdateObject>();
             if (rawUpdateObj == null || !rawUpdateObj.HasValues)
             {
-                return updateObjects;
+                var error = new Error
+                {
+                    Message = "No object provided to update"
+                };
+
+                return (null, error);
             }
 
             var updatablePropertyNames = GetUpdatablePropertyNames<T>();
             foreach (var obj in rawUpdateObj)
             {
                 var rawPropertyName = obj.Key;
-
                 if (!updatablePropertyNames.Contains(rawPropertyName))
                 {
-                    continue;
+                    var error = new Error
+                    {
+                        Message = $"Cannot update property {rawPropertyName} on a {typeof(T).Name}."
+                    };
+
+                    return (null, error);
                 }
 
                 var value = rawUpdateObj.Value<string>(rawPropertyName);
-                var deltaObject = new UpdateObject
+                var updateObject = new UpdateObject
                 {
                     Property = rawPropertyName,
                     Value = value
                 };
 
-                updateObjects.Add(deltaObject);
+                updateObjects.Add(updateObject);
             }
 
-            return updateObjects;
+            return (updateObjects, null);
         }
 
         private List<string> GetUpdatablePropertyNames<T>()
@@ -66,5 +75,10 @@ namespace CustomAttributeExample
 
             return updatablePropertyNames;
         }
+
+        //private bool ValueIsValidType<T>(string value)
+        //{
+            
+        //}
     }
 }
