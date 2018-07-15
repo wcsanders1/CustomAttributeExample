@@ -98,6 +98,14 @@ namespace CustomAttributeExample
                 .FirstOrDefault(p => p.Name == property)
                 .PropertyType;
 
+            if (propertyType == null)
+            {
+                return new Error
+                {
+                    Message = $"'{property}' does not exist on {className}"
+                };
+            }
+
             var converter = TypeDescriptor.GetConverter(propertyType);
             try
             {
