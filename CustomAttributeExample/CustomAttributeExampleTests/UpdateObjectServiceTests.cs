@@ -10,7 +10,7 @@ namespace CustomAttributeExampleTests
 {
     public class UpdateObjectServiceTests
     {
-        public class TestCustomer
+        private class TestCustomer
         {
             public long Id { get; set; }
 
@@ -28,7 +28,7 @@ namespace CustomAttributeExampleTests
             public bool Deleted { get; set; }
         }
 
-        public class TestCompany
+        private class TestCompany
         {
             [IsUpdatable]
             public string Name { get; set; }
@@ -43,6 +43,18 @@ namespace CustomAttributeExampleTests
             public DateTime CreatedAt { get; set; }
         }
 
+        private class TestAccount
+        {
+            [IsUpdatable]
+            public decimal Amount { get; set; }
+
+            [IsUpdatable]
+            public uint TripsTaken { get; set; }
+
+            [IsUpdatable]
+            public DateTime DueDate { get; set; }
+        }
+
         [Fact]
         public void GetUpdateObjects_ReturnsError_WhenProvidedNonUpdatableCustomerProperty()
         {
@@ -55,8 +67,7 @@ namespace CustomAttributeExampleTests
                 FirstName = updatedFirstName,
                 LastName = updatedLastName,
                 CreatedAt = DateTime.Now,
-                Deleted = true,
-                SomeBadProperty = "badValue"
+                Deleted = true
             };
 
             var testCustomerJObj = JObject.FromObject(testCustomer);
@@ -140,6 +151,108 @@ namespace CustomAttributeExampleTests
             Assert.True(result.Count == 2);
             Assert.Contains(result, d => d.Value == updatedName);
             Assert.Contains(result, d => d.Value == updatedSales);
+        }
+
+        [Fact]
+        public void GetUpdateObjects_ReturnsError_WhenPropertyHasInvalidDecimalValue()
+        {
+            var testAccount = new
+            {
+                Amount = "notADecimal"
+            };
+
+            var testAccountObj = JObject.FromObject(testAccount);
+            var sut = new UpdateObjectService();
+            var (result, error) = sut.GetUpdateObjects<TestAccount>(testAccountObj);
+
+            Assert.Null(result);
+            Assert.NotNull(error);
+            Assert.IsType<Error>(error);
+        }
+
+        [Fact]
+        public void GetUpdateObjects_ReturnsError_WhenPropertryHasInvalidUIntValue()
+        {
+            var testAccount = new
+            {
+                TripsTaken = -5
+            };
+
+            var testAccountObj = JObject.FromObject(testAccount);
+            var sut = new UpdateObjectService();
+            var (result, error) = sut.GetUpdateObjects<TestAccount>(testAccountObj);
+
+            Assert.Null(result);
+            Assert.NotNull(error);
+            Assert.IsType<Error>(error);
+        }
+
+        [Fact]
+        public void GetUpdateObjects_ReturnsError_WhenPropertyHasInvalidDateValue()
+        {
+            var testAccount = new
+            {
+                DueDate = "not a date"
+            };
+
+            var testAccountObj = JObject.FromObject(testAccount);
+            var sut = new UpdateObjectService();
+            var (result, error) = sut.GetUpdateObjects<TestAccount>(testAccountObj);
+
+            Assert.Null(result);
+            Assert.NotNull(error);
+            Assert.IsType<Error>(error);
+        }
+
+        [Fact]
+        public void GetUpdateObjects_ReturnsUpdateObjects_WhenPropertyHasValidValues()
+        {
+            const decimal testAmount = 45.66M;
+            const uint testTripsTaken = 456;
+            var testDueDate = DateTime.Now;
+
+            var testAccount = new
+            {
+                Amount = testAmount,
+                TripsTaken = testTripsTaken,
+                DueDate = testDueDate
+            };
+
+            var testAccountObj = JObject.FromObject(testAccount);
+            var sut = new UpdateObjectService();
+            var (result, error) = sut.GetUpdateObjects<TestAccount>(testAccountObj);
+
+            Assert.Null(error);
+            Assert.NotNull(result);
+            Assert.IsType<List<UpdateObject>>(result);
+            Assert.Contains(result, d => d.Value == testAmount.ToString());
+            Assert.Contains(result, d => d.Value == testTripsTaken.ToString());
+        }
+
+        [Fact]
+        public void GetUpdateObjects_ReturnsUpdateObjects_WhenDatePropertyHasConvertableStringValue()
+        {
+            const decimal testAmount = 45.66M;
+            const uint testTripsTaken = 456;
+            var testDueDate = "june 5, 2004";
+
+            var testAccount = new
+            {
+                Amount = testAmount,
+                TripsTaken = testTripsTaken,
+                DueDate = testDueDate
+            };
+
+            var testAccountObj = JObject.FromObject(testAccount);
+            var sut = new UpdateObjectService();
+            var (result, error) = sut.GetUpdateObjects<TestAccount>(testAccountObj);
+
+            Assert.Null(error);
+            Assert.NotNull(result);
+            Assert.IsType<List<UpdateObject>>(result);
+            Assert.Contains(result, d => d.Value == testAmount.ToString());
+            Assert.Contains(result, d => d.Value == testTripsTaken.ToString());
+            Assert.Contains(result, d => d.Value == testDueDate.ToString());
         }
     }
 }
