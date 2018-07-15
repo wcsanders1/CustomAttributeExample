@@ -32,6 +32,16 @@ namespace CustomAttributeExample
             }
 
             var updatablePropertyNames = GetUpdatablePropertyNames<T>();
+            if (updatablePropertyNames == null || updatablePropertyNames.Count == 0)
+            {
+                var error = new Error
+                {
+                    Message = $"Cannot update a {typeof(T).Name}"
+                };
+
+                return (null, error);
+            }
+
             foreach (var obj in rawUpdateObj)
             {
                 var propertyName = obj.Key;
