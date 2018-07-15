@@ -31,12 +31,13 @@ namespace CustomAttributeExample
                 return (null, error);
             }
 
+            var className = typeof(T).Name;
             var updatablePropertyNames = GetUpdatablePropertyNames<T>();
             if (updatablePropertyNames == null || updatablePropertyNames.Count == 0)
             {
                 var error = new Error
                 {
-                    Message = $"Cannot update a {typeof(T).Name}"
+                    Message = $"Cannot update a {className}"
                 };
 
                 return (null, error);
@@ -49,7 +50,7 @@ namespace CustomAttributeExample
                 {
                     var error = new Error
                     {
-                        Message = $"Cannot update property '{propertyName}' on a {typeof(T).Name}."
+                        Message = $"Cannot update property '{propertyName}' on a {className}."
                     };
 
                     return (null, error);
