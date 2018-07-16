@@ -20,7 +20,6 @@ namespace CustomAttributeExample
         public (List<UpdateObject>, Error) GetUpdateObjects<T>(JObject rawUpdateObj)
             where T : class
         {
-            var updateObjects = new List<UpdateObject>();
             if (rawUpdateObj == null || !rawUpdateObj.HasValues)
             {
                 var error = new Error
@@ -43,6 +42,7 @@ namespace CustomAttributeExample
                 return (null, error);
             }
 
+            var updateObjects = new List<UpdateObject>();
             foreach (var obj in rawUpdateObj)
             {
                 var propertyName = obj.Key;
